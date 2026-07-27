@@ -15,7 +15,8 @@ Follow these phases in order. Skip Phase 0 only for trivial tasks
 (<~20 lines, obvious approach, no schema/pipeline impact).
 
 ## Phase 0 - Plan
-Enter plan mode. Explore read-only. The plan must contain these five items:
+Explore read-only (use plan mode where the harness provides it for code
+tasks). The plan must contain these five items:
 - Objective (one sentence)
 - Deliverable (exact file paths that will exist when done)
 - Approach (key decisions + one rejected alternative if non-obvious)
@@ -24,7 +25,18 @@ Enter plan mode. Explore read-only. The plan must contain these five items:
   cost tradeoff)
 If the harness's native plan format is fuller (Context, Verification
 sections), use the native format - these five items are the required core,
-not a cap on the file. Wait for approval before editing anything.
+not a cap on the file.
+
+Gate calibration (precedence when instructions conflict):
+- Default: wait for approval before editing anything.
+- If the environment's own instructions forbid pausing (autonomous/goal
+  mode), do not stall and do not ignore this phase: record the plan as the
+  session's first changelog entry and proceed. Pause ONLY for decisions
+  with real cost (irreversible actions, significant spend, destructive
+  operations), using whatever question mechanism the harness provides.
+- For tasks that produce measurements or analysis rather than code, plan
+  mode is the wrong mechanism: present the five items inline and gate only
+  on decisions with real cost.
 
 ## Phase 1 - Execute
 Default: do the work directly in the main thread. Subagents cost real money
@@ -48,10 +60,11 @@ results. No handoff messages between steps - the artifact on disk is the
 handoff.
 
 ## Phase 2 - Verify
-- Check for evidence that the plugin hooks fired (lint/format output after
-  edits, a test run at stop). If there is NO such evidence in this session,
-  the hooks are not active in this environment: run the lint and the test
-  suite yourself before proceeding. Never assume an unverified hook ran.
+- The plugin's hooks always emit a `[dev-workflow]` heartbeat line (lint
+  after edits, stop-check at session end), even when they skip. If NO
+  `[dev-workflow]` lines have appeared this session, the hooks are not
+  active in this environment: run the lint and the test suite yourself
+  before proceeding. Never assume an unverified hook ran.
 - Before declaring done on any significant change: get a `code-reviewer`
   pass on the diff (subagent if warranted by size, inline otherwise). The
   review must complete BEFORE the closing report - a review that lands after
@@ -60,6 +73,11 @@ handoff.
   mentioned", "no test covers Y") must be checked against the whole file or
   suite (grep/search), not accepted from a partial read.
 - Run tests before claiming anything works. "Should work" is not a status.
+- MEASUREMENT TASKS (run-and-report-numbers rather than write-code): the
+  code-reviewer pass does not apply. Instead: (1) snapshot any mutable
+  state before overwriting it; (2) capture a baseline before the change;
+  (3) reproduce a result once before quoting it; (4) report numbers only
+  with method and sample per the evidence rule.
 
 ## Phase 3 - Deliver
 - Deliverables = files at the paths named in the plan, nothing else.
@@ -105,5 +123,8 @@ If a cap forces omission, end with:
   a partial read is not evidence of absence.
 - Never report a number (precision, recall, latency, coverage) without
   stating how it was measured and on what sample; label proxies as proxies.
-- Prefer editing existing files over creating new ones.
+- Prefer editing existing files over creating new ones. Creating a new
+  file is justified when reusing an existing one would require a flag or
+  parameter that changes its contract; when creating one, record in the
+  changelog entry which existing file was rejected and why.
 - Handle nulls, duplicates, and empty inputs in any data-touching code.

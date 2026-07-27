@@ -1,6 +1,6 @@
 {
   "name": "dev-workflow",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Plan-first development workflow with session-persistent memory (changelog-as-memory), specialist role contracts (auditor, code reviewer, test writer), tier-calibrated code minimalism, evidence discipline, and a hard blocker protocol.",
   "author": {
     "name": "Dhananjay Mahendiratta"
@@ -8,7 +8,14 @@
   "homepage": "https://github.com/Dhananjay625/dev-workflow",
   "repository": "https://github.com/Dhananjay625/dev-workflow",
   "license": "MIT",
-  "keywords": ["workflow", "changelog", "session-memory", "code-review", "minimalism", "yagni"],
+  "keywords": [
+    "workflow",
+    "changelog",
+    "session-memory",
+    "code-review",
+    "minimalism",
+    "yagni"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Dev Workflow",

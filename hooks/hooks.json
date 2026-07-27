@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[dev-workflow] Session rules: (1) Log every change to CHANGELOG.md in the same turn (file:line - before->after - why - verified how). (2) Before this session ends, even if blocked/interrupted, rewrite the \"## Current state\" block so a fresh session can resume from it alone. (3) For non-trivial tasks apply the workflow skill.'; if [ -f CHANGELOG.md ]; then if grep -q '^## Current state' CHANGELOG.md; then echo '--- RESUME CONTEXT (CHANGELOG.md) ---'; awk '/^## Current state/{f=1} /^---$/{f=0} f' CHANGELOG.md; echo '--- Last 3 entries ---'; L=$(grep -n '^### ' CHANGELOG.md | tail -3 | head -1 | cut -d: -f1); [ -n \"$L\" ] && tail -n +$L CHANGELOG.md | head -40; else echo \"[dev-workflow] CHANGELOG.md exists but has NO '## Current state' block. FIRST ACTION: PREPEND the Current state block (format: ${CLAUDE_PLUGIN_ROOT}/templates/CHANGELOG.template.md) above the existing content, filled from the repo's actual state. Do NOT rewrite or truncate existing history.\"; fi; else echo \"[dev-workflow] No CHANGELOG.md in this project. FIRST ACTION: create it from ${CLAUDE_PLUGIN_ROOT}/templates/CHANGELOG.template.md before any other work.\"; fi; exit 0"
+            "command": "echo '[dev-workflow] Session rules: (1) Log every change to the project CHANGELOG.md in the same turn (file:line - before->after - why - verified how). (2) Before this session ends, even if blocked/interrupted, rewrite the \"## Current state\" block so a fresh session can resume from it alone. (3) For non-trivial tasks apply the workflow skill.'; if [ -f CHANGELOG.md ]; then if grep -q '^## Current state' CHANGELOG.md; then echo '--- RESUME CONTEXT (CHANGELOG.md) ---'; awk '/^## Current state/{f=1} /^---$/{f=0} f' CHANGELOG.md; echo '--- Last 3 entries ---'; L=$(grep -n '^### ' CHANGELOG.md | tail -3 | head -1 | cut -d: -f1); [ -n \"$L\" ] && tail -n +$L CHANGELOG.md | head -40; else echo \"[dev-workflow] CHANGELOG.md exists here but has NO '## Current state' block. PREPEND the block (format: ${CLAUDE_PLUGIN_ROOT}/templates/CHANGELOG.template.md) above the existing content, filled from the repo's actual state. Do NOT rewrite or truncate history.\"; fi; else FOUND=$(find . -maxdepth 3 -name CHANGELOG.md -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/vendor/*' 2>/dev/null | head -3); if [ -n \"$FOUND\" ]; then echo \"[dev-workflow] No CHANGELOG.md at this session root, but found existing changelog(s):\"; echo \"$FOUND\"; echo \"The project's cross-session memory almost certainly lives there. Use the changelog in the directory containing the files you will edit. Do NOT create a second changelog at this root - that would split the project's memory.\"; else echo \"[dev-workflow] No CHANGELOG.md found within 3 levels of this session root. If your work targets a project directory deeper than that, check it first. Only if the project you are editing truly has none: create one there from ${CLAUDE_PLUGIN_ROOT}/templates/CHANGELOG.template.md before other work.\"; fi; fi; exit 0"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -z \"$f\" ] && exit 0; case \"$f\" in *.py) command -v ruff >/dev/null && ruff check --fix \"$f\" 2>&1 | tail -5 ;; *.js|*.jsx|*.ts|*.tsx) npx --no-install prettier --write \"$f\" 2>/dev/null ;; esac; exit 0"
+            "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -z \"$f\" ] && { echo '[dev-workflow] lint: no file path (jq missing or non-file tool)'; exit 0; }; case \"$f\" in *.py) if command -v ruff >/dev/null; then ruff check --fix \"$f\" 2>&1 | tail -5; echo \"[dev-workflow] lint: ruff ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (ruff not installed)\"; fi ;; *.js|*.jsx|*.ts|*.tsx) if npx --no-install prettier --write \"$f\" >/dev/null 2>&1; then echo \"[dev-workflow] lint: prettier ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (prettier not installed)\"; fi ;; *) echo \"[dev-workflow] lint: no linter mapped for $f\" ;; esac; exit 0"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -f package.json ] && grep -q '\"test\"' package.json 2>/dev/null; then npm test --silent 2>&1 | tail -10; elif [ -d tests ] || ls test_*.py *_test.py >/dev/null 2>&1; then command -v pytest >/dev/null && python3 -m pytest -q 2>&1 | tail -10; fi; exit 0"
+            "command": "if [ -f package.json ] && grep -q '\"test\"' package.json 2>/dev/null; then echo '[dev-workflow] stop-check: running npm test'; npm test --silent 2>&1 | tail -10; elif [ -d tests ] || ls test_*.py *_test.py >/dev/null 2>&1; then if command -v pytest >/dev/null; then echo '[dev-workflow] stop-check: running pytest'; python3 -m pytest -q 2>&1 | tail -10; else echo '[dev-workflow] stop-check: tests present but pytest not installed'; fi; else echo '[dev-workflow] stop-check: no test suite detected'; fi; exit 0"
           }
         ]
       }

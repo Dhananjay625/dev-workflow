@@ -12,7 +12,11 @@ fallback and the shared contract; the two never conflict.)
 
 ## 1. Session continuity (do this first, every session)
 
-- FIRST ACTION: read `CHANGELOG.md` in the repo root.
+- FIRST ACTION: locate and read the project's `CHANGELOG.md`. Check the
+  current directory, then search downward (excluding node_modules/.git).
+  In a monorepo, the changelog next to the files being edited is the
+  project's memory - never create a second one at a higher level, which
+  would split it.
   - The `## Current state` block at the top says exactly where the last
     session stopped: what works, what's broken, the next step, open
     decisions, and known dead ends. Resume from it. Never re-explore or
@@ -42,6 +46,13 @@ wait for approval before editing anything. The plan must contain:
 
 Trivial tasks (<~20 lines, obvious approach): just do them.
 
+Gate calibration: by default wait for approval before editing. If the
+environment's own instructions forbid pausing, record the plan as the
+first changelog entry and proceed, pausing only for decisions with real
+cost (irreversible, significant spend, destructive). For measurement or
+analysis tasks that produce numbers rather than code, present the plan
+items inline - no plan mechanism needed.
+
 ## 3. Verify - never assume
 
 - Run tests before claiming anything works. "Should work" is not a status.
@@ -56,6 +67,10 @@ Trivial tasks (<~20 lines, obvious approach): just do them.
 - Negative claims ("X is never mentioned", "no test covers Y", "Z has no
   callers") require a whole-file or whole-repo search before being stated.
   Absence observed in a partial read is a guess, not a finding.
+- Measurement tasks (run-and-report-numbers): snapshot mutable state
+  before overwriting it, capture a baseline before the change, reproduce a
+  result once before quoting it, and report numbers only with method and
+  sample.
 
 ## 4. Evidence discipline
 

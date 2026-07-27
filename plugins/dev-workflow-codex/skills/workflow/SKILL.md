@@ -15,7 +15,12 @@ Follow these phases in order. Skip Phase 0 only for trivial tasks
 (<~20 lines, obvious approach, no schema/pipeline impact).
 
 ## Session continuity (do this first, every session)
-- FIRST ACTION: read `CHANGELOG.md` in the project root. Its
+- FIRST ACTION: locate the project's `CHANGELOG.md`. Check the session
+  root first, then search downward (e.g. `find . -maxdepth 3 -name
+  CHANGELOG.md` excluding node_modules/.git). In a monorepo, the changelog
+  in the directory containing the files being edited is the project's
+  memory - never create a second changelog at a higher level, which would
+  split it. Once located, read it: its
   `## Current state` block says exactly where the last session stopped -
   resume from it; never re-explore what it already answers.
 - If `CHANGELOG.md` does not exist, create it from this skill's
@@ -32,8 +37,7 @@ Follow these phases in order. Skip Phase 0 only for trivial tasks
   Respect the DO NOT list: recorded dead ends are never retried.
 
 ## Phase 0 - Plan
-Explore read-only. Present a plan and wait for approval before editing
-anything. The plan must contain these five items:
+Explore read-only. The plan must contain these five items:
 - Objective (one sentence)
 - Deliverable (exact file paths that will exist when done)
 - Approach (key decisions + one rejected alternative if non-obvious)
@@ -42,6 +46,17 @@ anything. The plan must contain these five items:
   estimated cost tradeoff)
 If the harness has a fuller native plan format, use it - these five items
 are the required core, not a cap.
+
+Gate calibration (precedence when instructions conflict):
+- Default: wait for approval before editing anything.
+- If the environment's own instructions forbid pausing (autonomous/goal
+  mode), do not stall and do not ignore this phase: record the plan as the
+  session's first changelog entry and proceed. Pause ONLY for decisions
+  with real cost (irreversible actions, significant spend, destructive
+  operations), using whatever question mechanism the harness provides.
+- For tasks that produce measurements or analysis rather than code, a plan
+  mechanism is unnecessary: present the five items inline and gate only on
+  decisions with real cost.
 
 ## Phase 1 - Execute
 Default: do the work directly in the main thread. Delegation to an
@@ -75,6 +90,11 @@ steps - the artifact on disk is the handoff.
   never mentioned", "no test covers Y") must be checked against the whole
   file or suite (grep/search), not accepted from a partial read.
 - Run tests before claiming anything works. "Should work" is not a status.
+- MEASUREMENT TASKS (run-and-report-numbers rather than write-code): the
+  CODE REVIEWER pass does not apply. Instead: (1) snapshot any mutable
+  state before overwriting it; (2) capture a baseline before the change;
+  (3) reproduce a result once before quoting it; (4) report numbers only
+  with method and sample per the evidence rule.
 
 ## Phase 3 - Deliver
 - Deliverables = files at the paths named in the plan, nothing else.
@@ -103,5 +123,8 @@ If a cap forces omission, end with:
   in a partial read is not evidence of absence.
 - Never report a number (precision, recall, latency, coverage) without
   stating how it was measured and on what sample; label proxies as proxies.
-- Prefer editing existing files over creating new ones.
+- Prefer editing existing files over creating new ones. Creating a new
+  file is justified when reusing an existing one would require a flag or
+  parameter that changes its contract; when creating one, record in the
+  changelog entry which existing file was rejected and why.
 - Handle nulls, duplicates, and empty inputs in any data-touching code.

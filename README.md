@@ -211,6 +211,29 @@ The workflow skill and hooks trigger automatically - commands are optional
 manual entry points. (Claude Code only; other agents achieve the same via
 the instructions in `AGENTS.md`.)
 
+## Field-tested notes (v1.5.0)
+
+Second real-session feedback round, fixed:
+- SessionStart hook no longer issues a false "no changelog" imperative
+  when the changelog lives in a subdirectory (monorepo case): it now
+  searches 3 levels down before declaring absence, reports what it found,
+  and explicitly warns against creating a second changelog that would
+  split the project's memory.
+- Gate calibration: when an environment's own instructions forbid pausing
+  (autonomous/goal modes), the plan is recorded as the first changelog
+  entry and work proceeds, pausing only for real-cost decisions. Resolves
+  the contradiction between "wait for approval" and no-pause harnesses.
+- Measurement mode: for run-and-report-numbers tasks, the reviewer pass is
+  replaced by snapshot-before-overwrite, baseline-first, and
+  reproduce-before-quoting. Plan mode is not required for non-code tasks;
+  the five plan items are presented inline.
+- File-creation test: creating a new file is justified when reuse would
+  require a flag that changes an existing file's contract - with the
+  rejected file recorded in the changelog entry.
+- Hook heartbeats: every hook now emits a [dev-workflow] line even when it
+  skips, so "did the hooks fire?" is decidable instead of ambiguous
+  silence.
+
 ## Field-tested notes (v1.2.0)
 
 Changes driven by real-session feedback:
