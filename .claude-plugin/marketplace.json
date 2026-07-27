@@ -1,0 +1,13 @@
+{
+  "name": "dev-workflow-marketplace",
+  "owner": {
+    "name": "Dhananjay Mahendiratta"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": ".",
+      "description": "Plan-first workflow with session-persistent memory (auto-resume changelog), context-isolated subagents, tier-calibrated code minimalism, deterministic quality hooks, and a hard blocker protocol."
+    }
+  ]
+}
