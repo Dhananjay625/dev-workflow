@@ -1,4 +1,4 @@
-# dev-workflow — Claude Code plugin
+# dev-workflow - Claude Code plugin
 
 A production workflow for Claude Code that installs once and applies to every
 project automatically. No per-project setup, no per-session instructions.
@@ -9,7 +9,7 @@ project automatically. No per-project setup, no per-session instructions.
 Claude Code has no memory between sessions. This plugin gives it one:
 - A `SessionStart` hook injects your project's `CHANGELOG.md` state (what
   works, what's broken, exact next step, known dead ends) into context the
-  moment every session opens — resuming never depends on the model
+  moment every session opens - resuming never depends on the model
   remembering to read a file.
 - Every change is logged in the same turn it's made, with file:line,
   before→after, why, and how it was verified.
@@ -19,7 +19,7 @@ Claude Code has no memory between sessions. This plugin gives it one:
 **2. Plan-first gating.**
 Non-trivial tasks (>~20 lines, >3 files, or any schema/pipeline change) go
 through plan mode first: a ≤10-line plan naming the exact deliverable paths,
-approach, and risks — approved before a single edit.
+approach, and risks - approved before a single edit.
 
 **3. Context-isolated subagents (real token savings).**
 Three read-mostly specialists absorb exploration noise so it never enters
@@ -32,21 +32,21 @@ your main context:
 | `test-writer` | Writes and runs tests; parallel-safe on disjoint file sets | ≤20 lines, pass/fail + exposed bugs |
 
 Density rule everywhere: caps limit length, never precision. If a cap forces
-omission, output ends with `OMITTED: <count> <type> — details in <file>`.
+omission, output ends with `OMITTED: <count> <type> - details in <file>`.
 
 **4. Deterministic quality hooks.**
-- On every file edit: auto-lint/format (ruff for Python, prettier for JS/TS —
+- On every file edit: auto-lint/format (ruff for Python, prettier for JS/TS -
   skipped gracefully if not installed).
 - On session stop: run the project's test suite if one exists.
 
 **5. Blocker protocol.**
 An approach that fails twice halts with
-`BLOCKER: <why> — proposed alternative: <one line>` — and the dead end is
+`BLOCKER: <why> - proposed alternative: <one line>` - and the dead end is
 recorded so it's never retried. No grinding dead paths.
 
 
 **6. Code minimalism (tier-calibrated).**
-A second skill enforces "every line is a liability" — but calibrated to
+A second skill enforces "every line is a liability" - but calibrated to
 context, not absolute: a throwaway script gets zero ceremony, a production
 service gets validation/error-handling/logging as a non-negotiable baseline,
 and everything above that baseline needs explicit spec justification.
@@ -56,16 +56,29 @@ a reference file loaded only when relevant, so the skill stays cheap.
 
 ## Install
 
-From GitHub (recommended):
+Two steps - add this repo as a marketplace, then install the plugin from it:
+
 ```
-/plugin install https://github.com/Dhananjay625/dev-workflow
+/plugin marketplace add Dhananjay625/dev-workflow
+/plugin install dev-workflow@dev-workflow-marketplace
 ```
-Or clone and install locally:
+
+Then run `/reload-plugins` (or restart Claude Code).
+
+Verify it loaded:
+- `/plugin list` shows `dev-workflow`
+- `/agents` shows `auditor`, `code-reviewer`, `test-writer`
+- Typing `/dev-workflow:` autocompletes `init`, `status`, `wrap`
+
+Local install (for development or offline use):
 ```
 git clone https://github.com/Dhananjay625/dev-workflow
 /plugin install ./dev-workflow
 ```
-Then run `/reload-plugins` (or restart Claude Code).
+
+Troubleshooting: a "Marketplace not found" error usually means the two-step
+flow above wasn't used, or Claude Code is outdated - run `claude update`
+and retry.
 
 ## Commands
 
@@ -75,15 +88,15 @@ Then run `/reload-plugins` (or restart Claude Code).
 | `/dev-workflow:status` | Show where the project stands (Current state + last 3 entries) |
 | `/dev-workflow:wrap` | End-of-session: verify entries, rewrite Current state, 5-line report |
 
-The workflow skill and hooks trigger automatically — commands are optional
+The workflow skill and hooks trigger automatically - commands are optional
 manual entry points.
 
 ## Requirements
 
 None hard. Optional, auto-detected:
-- `jq` — enables per-file lint-on-edit (`brew install jq` / `apt install jq`)
-- `ruff` (Python) or `prettier` (JS/TS) — enables auto-lint/format
-- `pytest` or an npm `test` script — enables test-on-stop
+- `jq` - enables per-file lint-on-edit (`brew install jq` / `apt install jq`)
+- `ruff` (Python) or `prettier` (JS/TS) - enables auto-lint/format
+- `pytest` or an npm `test` script - enables test-on-stop
 
 Everything degrades gracefully if absent.
 
@@ -114,7 +127,7 @@ dev-workflow/
 | Skill + agent descriptions | Always | A few dozen tokens |
 | Skill body | Only when a dev task triggers it | On demand |
 | Agent bodies | Only on dispatch | On demand |
-| Hooks | Never in context — shell commands | Zero; SessionStart injects only the changelog tail |
+| Hooks | Never in context - shell commands | Zero; SessionStart injects only the changelog tail |
 
 ## License
 
