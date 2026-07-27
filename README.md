@@ -1,4 +1,4 @@
-# dev-workflow
+# Dev-workflow
 
 A production workflow for AI coding agents: plan-first execution,
 cross-session memory via a project changelog, evidence discipline, and
