@@ -1,0 +1,20 @@
+{
+  "name": "dev-workflow-codex-marketplace",
+  "interface": {
+    "displayName": "Dev Workflow"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dev-workflow-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_FIRST_USE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

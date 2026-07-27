@@ -1,16 +1,32 @@
-# dev-workflow - Claude Code plugin
+# dev-workflow
 
-A production workflow for Claude Code that installs once and applies to every
-project automatically. No per-project setup, no per-session instructions.
+A production workflow for AI coding agents: plan-first execution,
+cross-session memory via a project changelog, evidence discipline, and
+tier-calibrated code minimalism.
+
+Works three ways:
+- **Claude Code plugin** - install once, everything is enforced
+  automatically (hooks, subagents, auto-triggering skills). No per-project
+  setup, no per-session instructions.
+- **Codex plugin** - the same skills as a native OpenAI Codex plugin,
+  installable from this repo's built-in Codex marketplace. See
+  [Install (Codex)](#install-codex).
+- **Any other agent** (Gemini CLI, Cursor, Aider, ...) - drop `AGENTS.md`
+  into your project root and the same ruleset applies by instruction. See
+  [Using with any AI agent](#using-with-any-ai-agent).
+
+Both modes share one `CHANGELOG.md` as common memory, so different agents
+can work the same repo and resume each other's sessions.
 
 ## What it does
 
 **1. Cross-session memory (auto-changelog).**
-Claude Code has no memory between sessions. This plugin gives it one:
-- A `SessionStart` hook injects your project's `CHANGELOG.md` state (what
-  works, what's broken, exact next step, known dead ends) into context the
-  moment every session opens - resuming never depends on the model
-  remembering to read a file.
+AI coding agents have no memory between sessions. This workflow gives them
+one, stored in the repo itself:
+- The project's `CHANGELOG.md` carries a `## Current state` block: what
+  works, what's broken, exact next step, known dead ends. Any agent resumes
+  from it. (In Claude Code, a `SessionStart` hook injects it automatically;
+  other agents are instructed to read it first.)
 - Every change is logged in the same turn it's made, with file:line,
   before→after, why, and how it was verified.
 - Before any session ends, the `## Current state` block is rewritten so a
@@ -54,7 +70,78 @@ Includes inline-until-3-uses, stdlib-first dependency rules, comment-why-
 not-what, and a mandatory delete pass before delivery. Long examples live in
 a reference file loaded only when relevant, so the skill stays cheap.
 
-## Install
+## Using with any AI agent
+
+No Claude Code required. `AGENTS.md` in this repo is a tool-agnostic port
+of the full ruleset - session-continuity changelog, plan-first gate,
+verification and evidence rules, blocker protocol, and tier-calibrated code
+minimalism - written for any agent that can read a file and follow
+instructions (Codex, Gemini CLI, Cursor, Aider, Windsurf, or anything
+comparable).
+
+Setup is one file. From your project root:
+```
+curl -O https://raw.githubusercontent.com/Dhananjay625/dev-workflow/main/AGENTS.md
+```
+`AGENTS.md` is an open standard read natively by 20+ tools. Per-tool notes:
+
+### OpenAI Codex (CLI and IDE extension)
+Nothing else to do. Codex reads `AGENTS.md` from the repo root
+automatically at session start - it is the tool that originated the
+standard. Notes:
+- Nested files win: in a monorepo, an `AGENTS.md` closer to the edited
+  files takes precedence, so you can drop this file in a subproject too.
+- For personal defaults across all repos, place a copy at
+  `~/.codex/AGENTS.md` (project files still override it).
+- Verify pickup: start a session and ask "what workflow rules apply?" -
+  Codex should describe the changelog and plan-first rules.
+
+### Cursor
+Reads `AGENTS.md` from the repo root natively - no extra setup. If your
+team already uses `.cursor/rules/`, keep those for Cursor-specific style
+rules; this file coexists with them.
+
+### Gemini CLI
+Reads `GEMINI.md` by default. Two options:
+- Point it at this file - in `.gemini/settings.json`:
+  `{ "contextFileName": "AGENTS.md" }`
+- Or just copy: `cp AGENTS.md GEMINI.md`
+
+### GitHub Copilot
+The coding agent reads `AGENTS.md` natively. For chat/inline Copilot,
+also copy it to `.github/copilot-instructions.md`:
+`mkdir -p .github && cp AGENTS.md .github/copilot-instructions.md`
+
+### Windsurf
+Reads `AGENTS.md` natively in current versions. On older versions:
+`cp AGENTS.md .windsurfrules`
+
+### Aider
+Listed as an `AGENTS.md` supporter; on versions without auto-discovery,
+load it explicitly: `aider --read AGENTS.md`
+(or set `read: AGENTS.md` in `.aider.conf.yml` so it applies every run).
+
+### Claude Code (without this plugin)
+The plugin is the better path (hooks + subagents), but the file alone
+works too: create a `CLAUDE.md` containing the single line `@AGENTS.md`,
+or run `/init` in a repo that already has `AGENTS.md`.
+
+### Anything else
+If a tool has its own instruction file, copy `AGENTS.md` to that filename.
+If it has none, paste "Read and follow AGENTS.md in the repo root" as your
+first message.
+
+Multiple different agents can then work the same repo sharing one
+`CHANGELOG.md` as common memory - what one agent records, the next one (of
+any kind) resumes from.
+
+What you keep: the entire workflow discipline. What is Claude
+Code-exclusive: deterministic hook enforcement, real context-isolated
+subagents, and automatic changelog injection at session start - other
+agents follow the rules by instruction rather than by mechanism, which is
+somewhat looser over very long sessions. Honest tradeoff, stated plainly.
+
+## Install (Claude Code)
 
 Two steps - add this repo as a marketplace, then install the plugin from it:
 
@@ -80,6 +167,38 @@ Troubleshooting: a "Marketplace not found" error usually means the two-step
 flow above wasn't used, or Claude Code is outdated - run `claude update`
 and retry.
 
+## Install (Codex)
+
+This repo doubles as a repo-scoped Codex marketplace
+(`.agents/plugins/marketplace.json`), so installation is:
+
+```
+git clone https://github.com/Dhananjay625/dev-workflow
+cd dev-workflow
+codex          # open Codex in the repo
+/plugins       # the "Dev Workflow" marketplace appears - select Install
+```
+
+Then start a NEW Codex thread (plugins load at session start; there is no
+hot-reload). To make the plugin available in your own projects rather than
+this repo, copy the marketplace entry into your personal marketplace at
+`~/.agents/plugins/marketplace.json` (point `source.path` at your clone),
+or vendor `plugins/dev-workflow-codex/` into your project repo.
+
+Invoke explicitly with `$workflow` / `$code-minimalism` (or `@dev-workflow`
+to browse), or just describe a dev task - Codex matches it against the
+skill descriptions automatically.
+
+What the Codex port contains vs the Claude Code plugin:
+- Identical: both skills (workflow, code-minimalism), the three specialist
+  role contracts (as `roles.md`, applied inline or via Codex multi-agent
+  delegation), the changelog template, and every rule from v1.2.0's
+  field-tested fixes.
+- Different: no lifecycle hooks - the Codex skill makes lint, tests, and
+  the read-changelog-first step explicit instructions instead, and pairing
+  it with `AGENTS.md` in your project root (which Codex reads natively at
+  every session start) restores the always-on layer.
+
 ## Commands
 
 | Command | What it does |
@@ -89,7 +208,8 @@ and retry.
 | `/dev-workflow:wrap` | End-of-session: verify entries, rewrite Current state, 5-line report |
 
 The workflow skill and hooks trigger automatically - commands are optional
-manual entry points.
+manual entry points. (Claude Code only; other agents achieve the same via
+the instructions in `AGENTS.md`.)
 
 ## Field-tested notes (v1.2.0)
 
@@ -111,27 +231,7 @@ Changes driven by real-session feedback:
   work-in-main-thread; delegate only when isolation value clearly exceeds
   the cost.
 
-## Using with other AI agents (Codex, Gemini CLI, Cursor, Aider, ...)
-
-The plugin machinery (hooks, subagents, auto-triggering skills) is Claude
-Code-specific, but the discipline layer is not. `AGENTS.md` in this repo is
-a tool-agnostic port of the full ruleset - session-continuity changelog,
-plan-first gate, verification and evidence rules, blocker protocol, and
-tier-calibrated code minimalism - written for any agent that can read a
-file and follow instructions.
-
-To use it: copy `AGENTS.md` into your project root. Most agents read it
-automatically (it is a common convention); if yours doesn't, point it at
-the file at session start. Multiple different agents can then work the same
-repo sharing one `CHANGELOG.md` as common memory - what one agent records,
-the next one (of any kind) resumes from.
-
-What you keep: the entire workflow discipline. What stays Claude
-Code-exclusive: deterministic hook enforcement, real context-isolated
-subagents, and automatic changelog injection at session start - other
-agents follow the rules by instruction rather than by mechanism.
-
-## Requirements
+## Requirements (Claude Code hooks)
 
 None hard. Optional, auto-detected:
 - `jq` - enables per-file lint-on-edit (`brew install jq` / `apt install jq`)
@@ -156,12 +256,16 @@ dev-workflow/
 ├── hooks/hooks.json         # SessionStart resume + lint-on-edit + test-on-stop
 ├── commands/                # /init, /status, /wrap
 ├── templates/CHANGELOG.template.md
+├── .agents/plugins/marketplace.json # repo-scoped CODEX marketplace
+├── plugins/dev-workflow-codex/      # native Codex plugin port
+│   ├── .codex-plugin/plugin.json
+│   └── skills/                      # workflow (+ roles.md, template), code-minimalism
 ├── AGENTS.md                        # tool-agnostic port for other AI agents
 ├── README.md
 └── LICENSE
 ```
 
-## Token design
+## Token design (Claude Code)
 
 | Component | When it loads | Cost |
 |---|---|---|
