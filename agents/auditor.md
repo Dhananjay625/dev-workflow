@@ -16,6 +16,8 @@ Rules:
 - Verify every claim by reading the actual code — never infer from filenames
   or comments.
 - Every finding cites file:line.
+- Negative claims ("no caller", "never handled", "zero mentions") require a
+  whole-file or whole-repo grep before being reported; cite the command run.
 
 Output format (this is ALL you return — no narration of your process):
 

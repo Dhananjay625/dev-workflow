@@ -91,6 +91,46 @@ and retry.
 The workflow skill and hooks trigger automatically - commands are optional
 manual entry points.
 
+## Field-tested notes (v1.2.0)
+
+Changes driven by real-session feedback:
+- Subagent dispatch is now explicitly synchronous: wait for results before
+  the phase that consumes them; a spawn acknowledgement with no findings =
+  failed after one retry, do the job inline. Reviews must land BEFORE the
+  closing report or they gate nothing.
+- Hook verification fallback: if there is no evidence hooks fired in a
+  session (no lint output on edit, no test run at stop), the skill now
+  requires running those checks manually instead of assuming.
+- Reviewer hardening: explicit diff scoping (plain `git diff` shows ALL
+  uncommitted work, not just this session's change) and mandatory
+  whole-file grep before reporting any negative claim ("zero mentions of
+  X"), with the search command cited.
+- Changelog bootstrap now handles existing changelogs that lack a
+  `## Current state` block: the block is PREPENDED, history untouched.
+- Cost honesty: subagents cost real money and time. The default remains
+  work-in-main-thread; delegate only when isolation value clearly exceeds
+  the cost.
+
+## Using with other AI agents (Codex, Gemini CLI, Cursor, Aider, ...)
+
+The plugin machinery (hooks, subagents, auto-triggering skills) is Claude
+Code-specific, but the discipline layer is not. `AGENTS.md` in this repo is
+a tool-agnostic port of the full ruleset - session-continuity changelog,
+plan-first gate, verification and evidence rules, blocker protocol, and
+tier-calibrated code minimalism - written for any agent that can read a
+file and follow instructions.
+
+To use it: copy `AGENTS.md` into your project root. Most agents read it
+automatically (it is a common convention); if yours doesn't, point it at
+the file at session start. Multiple different agents can then work the same
+repo sharing one `CHANGELOG.md` as common memory - what one agent records,
+the next one (of any kind) resumes from.
+
+What you keep: the entire workflow discipline. What stays Claude
+Code-exclusive: deterministic hook enforcement, real context-isolated
+subagents, and automatic changelog injection at session start - other
+agents follow the rules by instruction rather than by mechanism.
+
 ## Requirements
 
 None hard. Optional, auto-detected:
@@ -108,7 +148,7 @@ dev-workflow/
 │   ├── plugin.json          # manifest (required)
 │   └── marketplace.json     # lets this repo act as a marketplace
 ├── skills/
-│   ├── dev-workflow/SKILL.md        # workflow procedure (loads on demand)
+│   ├── workflow/SKILL.md            # workflow procedure (loads on demand)
 │   └── code-minimalism/
 │       ├── SKILL.md                 # minimalism rules (loads on demand)
 │       └── reference.md             # examples (loaded only when relevant)
@@ -116,6 +156,7 @@ dev-workflow/
 ├── hooks/hooks.json         # SessionStart resume + lint-on-edit + test-on-stop
 ├── commands/                # /init, /status, /wrap
 ├── templates/CHANGELOG.template.md
+├── AGENTS.md                        # tool-agnostic port for other AI agents
 ├── README.md
 └── LICENSE
 ```

@@ -1,12 +1,22 @@
 {
   "name": "dev-workflow",
-  "description": "Plan-first development workflow with session-persistent memory (auto-resume changelog), context-isolated subagents (auditor, code-reviewer, test-writer), a code-minimalism discipline calibrated to project tier, deterministic quality hooks, and a hard blocker protocol. Install once — zero per-project setup.",
-  "version": "1.1.0",
+  "description": "Plan-first development workflow with session-persistent memory (auto-resume changelog), context-isolated subagents (auditor, code-reviewer, test-writer), a code-minimalism discipline calibrated to project tier, deterministic quality hooks, and a hard blocker protocol. Install once \u2014 zero per-project setup.",
+  "version": "1.3.0",
   "author": {
     "name": "Dhananjay Mahendiratta"
   },
   "homepage": "https://github.com/Dhananjay625/dev-workflow",
   "repository": "https://github.com/Dhananjay625/dev-workflow",
   "license": "MIT",
-  "keywords": ["workflow", "plan-mode", "subagents", "changelog", "session-memory", "hooks", "code-review", "minimalism", "yagni"]
+  "keywords": [
+    "workflow",
+    "plan-mode",
+    "subagents",
+    "changelog",
+    "session-memory",
+    "hooks",
+    "code-review",
+    "minimalism",
+    "yagni"
+  ]
 }
