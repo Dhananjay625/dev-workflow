@@ -37,15 +37,32 @@ Non-trivial tasks (>~20 lines, >3 files, or any schema/pipeline change) go
 through plan mode first: a ≤10-line plan naming the exact deliverable paths,
 approach, and risks - approved before a single edit.
 
-**3. Context-isolated subagents (real token savings).**
-Three read-mostly specialists absorb exploration noise so it never enters
-your main context:
+**3. Domain teams that assemble themselves on heavy tasks.**
+When a task is heavy, a `UserPromptSubmit` hook detects its domain and injects
+the matching role menu; the agent then staffs a team from it — the way a real
+engineering team is assembled for the job in front of it:
 
-| Agent | Job | Returns |
+| Domain | Roles | Topology |
 |---|---|---|
-| `auditor` | Deep-reads many files for bugs, silent data loss, dead code | ≤40 dense lines, severity-ordered, file:line cited |
-| `code-reviewer` | Reviews the final diff: correctness, security, plan compliance | ≤30 lines, verdict + fixes |
-| `test-writer` | Writes and runs tests; parallel-safe on disjoint file sets | ≤20 lines, pass/fail + exposed bugs |
+| ML / model | `researcher`, `data-engineer`, `ml-engineer`, `validation-engineer` | Sequential chain |
+| Data pipeline | `data-engineer`, `pipeline-engineer`, `auditor` | Engineers parallel on disjoint paths |
+| Web app | `backend-engineer`, `frontend-engineer`, `test-writer` | Front/back parallel; backend publishes the contract |
+| General | `auditor`, `test-writer` | Auditor before planning |
+
+`code-reviewer` closes every heavy task, last, before delivery.
+
+**It is a menu, not a headcount.** The agent dispatches the smallest subset
+covering the concerns the task actually has — a one-file CSS fix gets one
+role or none; a full training run may need all four. Never a role whose
+deliverable would be empty.
+
+**Path ownership is what makes parallelism safe.** Every role gets an
+explicit, disjoint set of owned paths and edits nothing outside them,
+reporting needed outside changes back instead. Overlapping paths run
+sequentially. Without this rule, two agents silently overwrite each other.
+
+Light tasks stay in the main thread. A four-role team costs roughly 4× the
+tokens of working inline — worth it on heavy work, wasteful on light work.
 
 Density rule everywhere: caps limit length, never precision. If a cap forces
 omission, output ends with `OMITTED: <count> <type> - details in <file>`.
@@ -275,8 +292,13 @@ dev-workflow/
 │   └── code-minimalism/
 │       ├── SKILL.md                 # minimalism rules (loads on demand)
 │       └── reference.md             # examples (loaded only when relevant)
-├── agents/                  # auditor, code-reviewer, test-writer
-├── hooks/hooks.json         # SessionStart resume + lint-on-edit + test-on-stop
+├── agents/                  # generic: auditor, code-reviewer, test-writer
+│                            # domain: researcher, data-engineer, ml-engineer,
+│                            #   validation-engineer, pipeline-engineer,
+│                            #   backend-engineer, frontend-engineer
+├── hooks/
+│   ├── hooks.json           # SessionStart resume + team-router + lint + test-on-stop
+│   └── team-router.sh       # UserPromptSubmit: heavy-task + domain detection
 ├── commands/                # /init, /status, /wrap
 ├── templates/CHANGELOG.template.md
 ├── .agents/plugins/marketplace.json # repo-scoped CODEX marketplace

@@ -22,9 +22,9 @@ fallback and the shared contract; the two never conflict.)
     decisions, and known dead ends. Resume from it. Never re-explore or
     re-plan what it already answers.
   - If `CHANGELOG.md` does not exist, create it using the format in
-    section 7 before any other work.
+    section 8 before any other work.
   - If it exists but has no `## Current state` block, PREPEND the block
-    (section 7 format) above the existing content. Never rewrite, reorder,
+    (section 8 format) above the existing content. Never rewrite, reorder,
     or truncate existing history.
 - DURING WORK: append one entry per change, in the same turn the change is
   made. Never batch entries at session end. Entry format:
@@ -53,7 +53,59 @@ cost (irreversible, significant spend, destructive). For measurement or
 analysis tasks that produce numbers rather than code, present the plan
 items inline - no plan mechanism needed.
 
-## 3. Verify - never assume
+## 3. Assemble a team for heavy tasks
+
+LIGHT tasks: do the work yourself, start to finish. A delegated worker that
+returns what you already know is pure cost.
+
+HEAVY tasks: staff a team of specialist roles. HEAVY = any of: >3 files,
+>~100 lines, a schema/pipeline/migration change, an unfamiliar area needing
+>5 file reads, or two or more genuinely distinct skill sets (data +
+modelling, UI + server).
+
+MECHANISM (this section works with or without subagents):
+- If your tool CAN spawn isolated workers (subagents, background agents,
+  multi-agent delegation), dispatch one per role. Dispatch synchronously and
+  WAIT for each result before starting the phase that consumes it. A spawn
+  acknowledgement with no findings = failed after one retry; then do that
+  role's job yourself.
+- If it CANNOT, perform the roles yourself, one at a time, in the topology
+  order below, holding each role's contract while you do it. The value is in
+  the separation of concerns and the explicit handoffs, not the spawning.
+
+Pick roles from the domain menu - it is a MENU, not a fixed roster:
+
+| Domain | Roles | Topology |
+|---|---|---|
+| ML / model | RESEARCHER (prior art + baseline), DATA ENGINEER (data, splits), ML ENGINEER (train, model), VALIDATION ENGINEER (eval) | Sequential - each consumes the previous one's output |
+| Data pipeline | DATA ENGINEER (transform/clean), PIPELINE ENGINEER (orchestration, retries), AUDITOR (row-loss scan) | Engineers parallel if paths disjoint; auditor after |
+| Web app | BACKEND ENGINEER (api, db), FRONTEND ENGINEER (ui, components), TEST WRITER (tests) | Front/back parallel; backend publishes the API contract first |
+| General | AUDITOR (map the area), TEST WRITER (assigned test paths) | Auditor before planning |
+
+CODE REVIEWER closes every heavy task, last, before the closing report.
+
+SIZE THE TEAM YOURSELF: use the smallest subset covering the distinct
+concerns THIS task actually has. A one-file CSS fix in a web task needs one
+role or none; a full training run may need all four. Never staff a role whose
+deliverable would be empty. If two roles would edit the same paths, merge
+them into one. State the roster and why that count in ONE line of the plan.
+
+PATH OWNERSHIP - this is what makes parallel work safe: give every role an
+explicit, DISJOINT set of owned paths. It edits nothing outside them and
+reports needed outside changes back instead of making them. Overlapping paths
+mean sequential execution, never parallel; violating this means two workers
+silently overwrite each other. No handoff messages between steps - the
+artifact on disk is the handoff.
+
+Each role obeys the density rule and the negative-claim rule from sections 4
+and 5, and reports in a capped, structured format (findings with file:line,
+what it delivered, what it could not verify).
+
+COST, HONESTLY: a four-role team costs roughly four times the tokens of doing
+it inline, plus wall-clock for the sequential legs. Worth it on heavy work,
+wasteful on light work.
+
+## 4. Verify - never assume
 
 - Run tests before claiming anything works. "Should work" is not a status.
 - Run the project's linter/formatter on files you edit if one is configured.
@@ -72,7 +124,7 @@ items inline - no plan mechanism needed.
   result once before quoting it, and report numbers only with method and
   sample.
 
-## 4. Evidence discipline
+## 5. Evidence discipline
 
 - Every claim about code cites file and line (e.g. `pipeline/gate.py:142`).
 - Never report a number (precision, recall, latency, coverage) without
@@ -84,14 +136,14 @@ items inline - no plan mechanism needed.
   If a limit forces omission, end with:
   `OMITTED: <count> <type> - details in <file>`
 
-## 5. Blocker protocol
+## 6. Blocker protocol
 
 If an approach fails twice, stop immediately. Output exactly:
 `BLOCKER: <why> - proposed alternative: <one line>`
 and wait for the user. Never grind a dead path to appear productive. Record
 the dead end in the changelog's DO NOT list so no agent retries it.
 
-## 6. Code minimalism
+## 7. Code minimalism
 
 Every line is a liability. Write only what the spec demands; when
 requirements change, add then - never predict.
@@ -122,7 +174,7 @@ Structure rules:
   variables, single-use helpers (inline them), never-changed config keys
   (hardcode), obvious comments, impossible-error handlers.
 
-## 7. Changelog format
+## 8. Changelog format
 
 ```markdown
 # Changelog
@@ -145,7 +197,7 @@ Structure rules:
 Max 15 lines in Current state, maximum density. Entries are append-only:
 never edit past entries.
 
-## 8. Delivery
+## 9. Delivery
 
 - Deliverables = files at the paths named in the plan, nothing else.
 - Closing report of at most 5 lines: what changed, test status, known gaps,

@@ -59,24 +59,49 @@ Gate calibration (precedence when instructions conflict):
   decisions with real cost.
 
 ## Phase 1 - Execute
-Default: do the work directly in the main thread. Delegation to an
-isolated worker (Codex multi-agent, or any subagent mechanism) costs real
-money and time - use it ONLY when the isolation value clearly exceeds
-that cost:
-1. A side task would flood the main context (deep multi-file audit, log
-   analysis, doc research) -> AUDITOR role - returns <=40 dense lines.
-2. Two workstreams with DISJOINT file sets can run in parallel ->
-   TEST WRITER roles, each assigned its own test file paths.
-3. The diff needs unbiased review -> CODE REVIEWER role - returns <=30
-   dense lines.
+
+LIGHT tasks: do the work directly in the main thread. A delegated worker
+that returns what you already know is pure cost.
+
+HEAVY tasks -> assemble a team. HEAVY = any of: >3 files, >~100 lines, a
+schema/pipeline/migration change, an unfamiliar area needing >5 file
+reads, or two or more genuinely distinct skill sets (data + modelling, UI
++ server). For these, delegation is the default, not the exception.
+
+Pick roles from the domain menu (a MENU, not a fixed roster):
+
+| Domain | Roles | Topology |
+|---|---|---|
+| ML / model | RESEARCHER (prior art + baseline), DATA ENGINEER (data/, splits), ML ENGINEER (train/, model/), VALIDATION ENGINEER (eval/) | Sequential chain - each consumes the previous one's output |
+| Data pipeline | DATA ENGINEER (transform/clean), PIPELINE ENGINEER (orchestration, retries), AUDITOR (row-loss scan) | Two engineers parallel if paths disjoint; auditor after |
+| Web app | BACKEND ENGINEER (api/, db/), FRONTEND ENGINEER (ui/, components/), TEST WRITER (tests/) | Front/back parallel; backend publishes the API contract first |
+| General / unmatched | AUDITOR (map the area), TEST WRITER (assigned test paths) | Auditor before planning |
+
+CODE REVIEWER closes every heavy task, last, before the closing report.
+
+SIZE THE TEAM YOURSELF: dispatch the smallest subset covering the distinct
+concerns THIS task actually has. A one-file CSS fix in a web task needs one
+role or none; a full training run may need all four. Never delegate a role
+whose deliverable would be empty. If two roles would edit the same paths,
+merge them into one. State the roster and why that count in ONE line of the
+plan, e.g. `Team: backend + test writer (2) - no UI change in this task`.
+
+PATH OWNERSHIP: give every role an explicit, DISJOINT set of owned paths;
+it edits nothing outside them and reports needed outside changes back
+instead. Overlapping paths mean sequential execution, never parallel -
+violating this means two workers silently overwrite each other.
+
+COST, HONESTLY: a four-role team costs roughly four times the tokens of
+doing it inline, plus wall-clock for the sequential legs. Worth it on
+heavy work, wasteful on light work.
+
 Role contracts (output format, caps, verification rules) are defined in
 this skill's `roles.md` - read it before delegating or performing a role.
-On small tasks, or if delegation is unavailable or returns only a spawn
-acknowledgement with no findings (treat as failed after one retry),
-perform the role inline following the same contract. Wait for each
-delegated result before entering the phase that consumes it. Never run
-parallel workers whose file sets overlap. No handoff messages between
-steps - the artifact on disk is the handoff.
+If delegation is unavailable, or returns only a spawn acknowledgement with
+no findings (treat as failed after one retry), perform the role inline
+following the same contract. Wait for each delegated result before entering
+the phase that consumes it. No handoff messages between steps - the
+artifact on disk is the handoff.
 
 ## Phase 2 - Verify
 - Run the project's linter/formatter on every file you edited, and run the

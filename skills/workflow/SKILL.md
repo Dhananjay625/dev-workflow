@@ -39,17 +39,51 @@ Gate calibration (precedence when instructions conflict):
   on decisions with real cost.
 
 ## Phase 1 - Execute
-Default: do the work directly in the main thread. Subagents cost real money
-and real time - dispatch one ONLY when the isolation value clearly exceeds
-that cost:
-1. A side task would flood the main context (deep multi-file audit, log
-   analysis, doc research) -> `auditor` - returns <=40 dense lines.
-2. Two workstreams with DISJOINT file sets can run in parallel ->
-   `test-writer` instances, each assigned its own test file paths.
-3. The diff needs unbiased review -> `code-reviewer` - returns <=30 dense
-   lines.
-On small tasks, all three jobs are done inline instead. Never dispatch
-parallel subagents whose file sets overlap.
+
+### Light tasks
+Do the work directly in the main thread. A subagent that would return what
+you already know is pure cost.
+
+### Heavy tasks -> assemble a team
+HEAVY = any of: >3 files, >~100 lines, a schema/pipeline/migration change, an
+unfamiliar area needing >5 file reads, or two or more genuinely distinct
+skill sets (data + modelling, UI + server). For these, dispatching is the
+default, not the exception.
+
+Pick the roles from the domain menu:
+
+| Domain | Roles (menu, not a roster) | Topology |
+|---|---|---|
+| ML / model | `researcher` (prior art + baseline), `data-engineer` (data/, splits), `ml-engineer` (train/, model/), `validation-engineer` (eval/) | Sequential chain - each consumes the previous one's output |
+| Data pipeline | `data-engineer` (transform/clean), `pipeline-engineer` (orchestration, retries), `auditor` (row-loss scan) | Two engineers parallel if paths disjoint; auditor after |
+| Web app | `backend-engineer` (api/, db/), `frontend-engineer` (ui/, components/), `test-writer` (tests/) | Front/back parallel; backend publishes the API contract first |
+| General / unmatched | `auditor` (map the area), `test-writer` (assigned test paths) | Auditor before planning |
+
+`code-reviewer` closes every heavy task, last, before the closing report.
+
+### Sizing the team (you decide, per task)
+Dispatch the smallest subset that covers the distinct concerns THIS task
+actually has. The menu is a menu: a one-file CSS fix in a web task needs one
+role or none; a full training run may need all four. Rules:
+- One role per distinct concern actually present. Never dispatch a role whose
+  deliverable would be empty - an ML task with the dataset already built does
+  not need `data-engineer`.
+- If two roles would edit the same paths, merge them into one dispatch.
+- State the roster and why that count in ONE line of the plan, e.g.
+  `Team: backend-engineer + test-writer (2) - no UI change in this task`.
+
+### Path ownership (prevents parallel corruption)
+Every dispatched role is given an explicit, DISJOINT set of owned paths and
+edits nothing outside them. Roles report needed outside changes back rather
+than making them. Overlapping paths mean sequential execution - never
+parallel. This is the rule that makes a parallel team safe; violating it
+means two agents silently overwrite each other.
+
+### Cost, stated honestly
+A four-role team costs roughly four times the tokens of doing it inline, plus
+wall-clock for the sequential legs. That is the price of isolation and
+independent review: worth paying on heavy work, wasteful on light work. Size
+accordingly.
 
 Dispatch mechanics (this matters): dispatch subagents synchronously via the
 Task tool and WAIT for each result before entering the phase that consumes
