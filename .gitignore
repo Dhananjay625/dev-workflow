@@ -1,0 +1,12 @@
+# Agent-runtime artifacts written into the repo root by tooling (claude-flow,
+# ruflo, agentdb). None of it is plugin source; ~3MB and growing. Without this
+# a single `git add -A` publishes local session state to the marketplace repo.
+.claude/
+.claude-flow/
+.swarm/
+*.rvf
+*.rvf.lock
+ruvector.db
+
+# OS / editor
+.DS_Store

@@ -171,7 +171,9 @@ Then run `/reload-plugins` (or restart Claude Code).
 
 Verify it loaded:
 - `/plugin list` shows `dev-workflow`
-- `/agents` shows `auditor`, `code-reviewer`, `test-writer`
+- `/agents` shows 10 agents: `auditor`, `code-reviewer`, `test-writer`,
+  `researcher`, `data-engineer`, `ml-engineer`, `validation-engineer`,
+  `pipeline-engineer`, `backend-engineer`, `frontend-engineer`
 - Typing `/dev-workflow:` autocompletes `init`, `status`, `wrap`
 
 Local install (for development or offline use):
