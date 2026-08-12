@@ -22,9 +22,21 @@
   MUTATING the user's file after every edit. Both are opt-out-less today.
   Also: "why is my pipeline dropping rows" still exits light (interrogative,
   no task verb). Diagnostic questions are cheap to escalate manually.
+- ALSO WORKING: Codex remote install, LIVE-VERIFIED against the real GitHub
+  URL after 046b384. `codex plugin marketplace add
+  https://github.com/Dhananjay625/dev-workflow` now resolves
+  (`source_type = "git"`) and `codex plugin list` shows the plugin
+  installed+enabled at 1.6.0. Root cause was
+  `.agents/plugins/marketplace.json` declaring `authentication:
+  "ON_FIRST_USE"`, which Codex 0.147.0's deserializer rejects (valid:
+  `ON_INSTALL` | `ON_USE`); the bad value aborted the entire marketplace
+  parse before any plugin was listed, so the error never named the plugin.
 - NEXT STEP: decide on the two accepted-risk hooks above - most likely a
   timeout on Stop and a documented opt-out env var for the lint mutation.
-  Then commit; the working tree has 4 modified files + new .gitignore.
+  Working tree is otherwise clean and pushed (origin/main == 046b384).
+  Optional: README.md:189-205 still documents only the clone-then-`/plugins`
+  Codex flow; the one-line `codex plugin marketplace add <url>` now works
+  and would be the better lead.
 - OPEN DECISIONS: HEAVY regex breadth still fires on `implement|build a|
   performance|integrat`; unchanged pending a real false-positive rate.
 - DO NOT: put team-router logic inline in hooks.json (4 domain branches +
@@ -37,6 +49,14 @@
   DO NOT gate the interrogative guard on HEAVY_GENERIC alone - polite requests
   ("could you train a classifier?") carry no HEAVY_GENERIC term and were
   silently dropped as light.
+  DO NOT invent enum values in `.agents/plugins/marketplace.json` - Codex
+  fails the WHOLE marketplace on one unknown variant and the error names
+  the line, never the plugin. Check against `codex plugin marketplace add
+  --help` and the accepted variants before editing policy fields.
+  DO NOT trust a working local Codex install as evidence the remote install
+  works - a stale registration from an older codex build kept `ON_FIRST_USE`
+  working locally for weeks while every GitHub-URL install failed. Verify
+  remote installs by `marketplace remove` then re-add from the URL.
 
 ---
 
@@ -67,6 +87,28 @@ change. Never edit past entries. -->
   pushed to origin/main. README.md:189-205 also still documents only the
   clone-then-`/plugins` flow, not the one-line
   `codex plugin marketplace add https://github.com/Dhananjay625/dev-workflow`.
+
+- PUSHED as 046b384 (aa0fa61..046b384, origin/main) — supersedes the
+  "STILL OPEN" bullet above; the remote install path is now live. Single
+  commit, sole author `Dhananjay <n11257997@qut.edu.au>`, no
+  `Co-Authored-By` trailer (user asked explicitly; also CLAUDE.md rule).
+  Carried the v1.6.0 audit follow-ups (team-router regressions, 10-agent
+  description, README agent list, new .gitignore) in the same commit
+  rather than splitting, since the CHANGELOG hunk spans both. — verified
+  END-TO-END against the real remote, not a local path:
+  `codex plugin marketplace remove dev-workflow-codex-marketplace` then
+  `codex plugin marketplace add https://github.com/Dhananjay625/dev-workflow`
+  → `{"marketplaceName":"dev-workflow-codex-marketplace","installedRoot":
+  "~/.codex/.tmp/marketplaces/dev-workflow-codex-marketplace"}`;
+  `codex plugin list` → `dev-workflow@dev-workflow-codex-marketplace
+  installed, enabled 1.6.0`; config.toml now records
+  `source_type = "git"`, `source = "https://github.com/Dhananjay625/dev-workflow.git"`.
+- SIDE EFFECT (user's machine, not the repo): the `remove` + git `add`
+  above replaced the earlier local-path marketplace registration. The
+  Playground path `/Users/.../Documents/Playground/.codex-marketplaces/dev-workflow`
+  is no longer registered at all — the plugin now resolves from the git
+  snapshot. Restore with `codex plugin marketplace add <that path>` if the
+  local working copy is wanted back.
 
 ### 2026-08-04 (audit continuation)
 - hooks/team-router.sh:15 — WEB vocabulary `-= \bauth\b` — the documented,
