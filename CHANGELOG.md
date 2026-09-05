@@ -35,6 +35,10 @@
   scripts/validate.sh holding the 9 repo invariants that were previously
   re-checked by hand each session. validate.sh is negative-tested: four
   injected faults each produced exit 1.
+- ALSO WORKING: v1.6.1 is RELEASED — annotated tag v1.6.1 at 56716a0, GitHub
+  release marked latest, tarball verified to carry 1.6.1 in both manifests and
+  to pass validate.sh in a clean checkout. The version is now pinnable; before
+  this the repo had no tags at all.
 - NEXT STEP: v1.6.1 is COMMITTED BUT NOT YET LIVE-VERIFIED end-to-end. The
   hook commands were verified in isolation (extracted from the JSON, piped
   into `sh`); what is NOT yet proven is that Claude Code itself honours the
@@ -87,12 +91,32 @@
   DO NOT add a CI lint step without running that linter locally first —
   shellcheck found 3 hard errors in the first draft of validate.sh, which
   would have made the very first CI run red.
+  DO NOT bump the version in plugin.json without cutting a matching tag — a
+  manifest version with no tag is a claim with no artifact behind it, and
+  users end up installing from a moving `main`. Verify a release by
+  downloading the published TARBALL and checking the version inside it, not
+  by checking the working tree you just tagged from.
 
 ---
 
 ## Entries
 <!-- Append-only. One entry per change, written in the same turn as the
 change. Never edit past entries. -->
+
+### 2026-09-05 (v1.6.1 released)
+- git tag v1.6.1 (annotated) at 56716a0 + GitHub release — the repo had ZERO
+  tags despite both manifests declaring 1.6.1, so the declared version had no
+  immutable reference: every install was really tracking `main` and nobody
+  could pin. Twelve-Factor V (build/release/run separation) — verified: tag
+  object b16dcb4 dereferences to 56716a0 == origin/main; `gh api
+  .../releases/latest` returns `v1.6.1`; release is not draft, not
+  prerelease. END-TO-END: downloaded the published tarball from the tag URL
+  (59,285 bytes), and in that clean extracted copy BOTH plugin.json files
+  read 1.6.1 and `sh scripts/validate.sh` exits 0 — so the artifact a user
+  actually installs is self-consistent, not just the working tree.
+- Release notes lead with the two opt-out env vars and the Stop timeout,
+  since those are what a cautious installer needs before trusting a plugin
+  that runs shell on every turn.
 
 ### 2026-09-05 (open-source infrastructure)
 - scripts/validate.sh — new (0→~100 lines) — the repo's invariants were being
