@@ -56,6 +56,10 @@
   HISTORY IS DELIBERATELY UNCHANGED — user chose not to rewrite, since new
   SHAs would break every existing clone and fork for a value GitHub may have
   cached anyway. Past commits still carry the old address; that is accepted.
+- MEASURED: router accuracy is 83.8% (57/68) on tests/router-cases.tsv;
+  `sh scripts/benchmark.sh` reproduces it and prints every miss. 8 of 11
+  misses are heavy-work-classified-as-light for lack of a vocabulary term.
+  This is the top open quality issue and the number to move.
 - OPEN DECISIONS: HEAVY regex breadth still fires on `implement|build a|
   performance|integrat`; unchanged pending a real false-positive rate.
 - DO NOT: put team-router logic inline in hooks.json (4 domain branches +
@@ -91,6 +95,13 @@
   DO NOT add a CI lint step without running that linter locally first —
   shellcheck found 3 hard errors in the first draft of validate.sh, which
   would have made the very first CI run red.
+  DO NOT tune the router against tests/router-cases.tsv and then quote the
+  resulting accuracy - that is training on the test set. Fix against the
+  failure MODE, then re-measure on prompts written after the fix.
+  DO NOT relabel a corpus case after seeing what the router did to it. One
+  label ("implement retry logic everywhere we call the payment provider" =
+  general, router said web) is genuinely debatable and was LEFT ALONE for
+  exactly this reason.
   DO NOT bump the version in plugin.json without cutting a matching tag — a
   manifest version with no tag is a claim with no artifact behind it, and
   users end up installing from a moving `main`. Verify a release by
@@ -102,6 +113,35 @@
 ## Entries
 <!-- Append-only. One entry per change, written in the same turn as the
 change. Never edit past entries. -->
+
+### 2026-09-05 (measurement: router benchmark)
+- tests/router-cases.tsv — new (68 labeled prompts) — the router had never been
+  measured against anything but ad-hoc spot checks, so no accuracy claim about
+  it could be made honestly. Labels were written as "what a reasonable
+  maintainer would want" BEFORE running the router, and cases expected to fail
+  were included deliberately; a corpus with no failures measures nothing.
+  Ambiguous prompts carry multiple acceptable labels ("web|ml").
+- scripts/benchmark.sh — new — measures router accuracy, context cost in
+  characters, and hook latency. Explicitly does NOT measure "does this make an
+  agent better at coding": that needs a controlled eval with blind grading,
+  and the script says so in its header so no number in it can be quoted as
+  that claim.
+- MEASURED (first run, this machine): router accuracy 57/68 = 83.8%.
+  Context cost: light prompt 60 chars (~15 tok), heavy prompt 888 chars
+  (~222 tok), SessionStart 9,820 chars (~2,455 tok) in THIS repo. Latency
+  9.4 ms light / 20.9 ms heavy, mean of 50 runs.
+- FINDING (not yet fixed): 8 of the 11 misses are the SAME failure mode —
+  plainly heavy work classified as LIGHT because it contains no HEAVY
+  vocabulary term ("add dark mode to the settings page", "port this bash
+  script to python", "remove all the dead code in the repo", "set up
+  pre-commit hooks"). Verified: that prompt matches 0 heavy-vocab terms, so
+  the gate drops it before domain detection runs. This is the DANGEROUS
+  direction of error - the router silently declines to staff work rather
+  than over-offering a role.
+- NOT CHANGED DELIBERATELY: the router was not tuned against this corpus in
+  the same session it was measured. Fixing the regex until the number goes up
+  would make the 83.8% an in-sample score and therefore meaningless. Any fix
+  needs a fresh held-out set written after the change.
 
 ### 2026-09-05 (v1.6.1 released)
 - git tag v1.6.1 (annotated) at 56716a0 + GitHub release — the repo had ZERO

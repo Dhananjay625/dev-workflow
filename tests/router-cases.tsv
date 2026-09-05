@@ -1,0 +1,74 @@
+# expected	prompt
+# expected may list several acceptable labels separated by |
+# labels: ml, pipe, web, general, light
+# Labels are what a REASONABLE MAINTAINER would want, written before running
+# the router - not transcribed from its output. Cases expected to fail are
+# included on purpose; a corpus with no failures measures nothing.
+ml	train a classifier on the support tickets dataset
+ml	fine-tune the embedding model on our internal docs
+ml	the model is overfitting on the validation set, fix it
+ml	add early stopping and checkpointing to the training loop
+ml	our f1 score dropped after the last data refresh, investigate why
+ml	implement a neural network for image segmentation
+ml	set up a hyperparameter search for the ranking model
+ml	write an evaluation harness that reports precision and recall
+ml	Could you train a classifier on the dataset?
+ml	build a recommendation model from the clickstream data
+pipe	build the ETL pipeline for the warehouse
+pipe	our nightly batch job silently drops rows, fix it
+pipe	add retries and idempotency to the ingest stage
+pipe	migrate the airflow dags over to dbt
+pipe	the data quality checks need to run before the load step
+pipe	extract the orders table into the warehouse nightly
+pipe	wire up incremental ingestion for the events feed
+pipe	build a backfill job for the last six months of data
+web	how do I fix the login form
+web	build a checkout page with stripe
+web	the dashboard component re-renders on every keystroke
+web	add an endpoint for updating user profiles
+web	implement sign-up with email verification
+web	our react app has a hydration mismatch on the profile page
+web	make the shopping cart persist across sessions
+web	build a REST API for the notifications service
+general	refactor the auth module across the repo
+general	audit the whole codebase for error handling
+general	migrate the project from python 3.9 to 3.12
+general	trace through why the CLI hangs on startup
+general	do a security review of the file upload path
+general	rewrite the config loading so it fails fast
+general	remove all the dead code in the repo
+general	split this 2000 line module into smaller files
+light	read the code
+light	is the dashboard up
+light	what is my login email
+light	fix a typo in the readme
+light	what does this function do
+light	who wrote this file
+light	when was this released
+light	show me the git log
+light	what is the difference between these two files
+light	explain this regex to me
+light	should I use postgres or mysql
+light	can you explain how the router works
+light	what version am I on
+light	is there a test for this
+pipe|general	why is my pipeline dropping rows
+ml|pipe	the training pipeline needs a new data quality check before the split
+web|ml	build a dashboard showing model accuracy over time
+web|ml	our endpoint that serves model predictions is too slow
+general|web	the login flow in the CLI tool needs rewriting
+light	add a comment explaining this function
+light	rename this variable to something clearer
+general	implement retry logic everywhere we call the payment provider
+web	fix the css on the mobile nav
+light	what does this error mean
+general	find every place we swallow an exception
+ml	does the checkpoint file include the optimizer state
+light	how many agents does this plugin ship
+general	port this bash script to python
+pipe	the warehouse load is taking 6 hours, make it faster
+web	add dark mode to the settings page
+ml	compare the baseline model against the new one on the holdout set
+light	git status
+light	what time is it
+general	set up pre-commit hooks for this repo
