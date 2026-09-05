@@ -43,11 +43,10 @@
   block in README.md:194-203 was written from `codex plugin --help`
   (subcommand is `add`, NOT `install`), not from an actual clean install.
   Re-verify with `codex plugin marketplace remove` then add from the URL.
-  ALSO NOT YET VERIFIED: the CI workflow has never actually run on GitHub —
-  it is green locally (validate.sh exit 0, shellcheck clean) but the runner
-  has not executed it once. Watch the first run; the README badge will show
-  it. And the repo DESCRIPTION and TOPICS on GitHub are still empty, which is
-  the single biggest discoverability gap for a public repo.
+  CI IS NOW LIVE-VERIFIED: run 33993259528 on the real ubuntu-latest runner
+  completed `success` in 13s (`gh run watch --exit-status` → 0), so both the
+  validate.sh and shellcheck steps pass off this machine, not just on macOS.
+  Repo description and 9 topics are set; repo is PUBLIC with issues enabled.
   RESOLVED (privacy): repo-local `git config user.email` is now the GitHub
   noreply address and the personal student address is redacted from this file.
   HISTORY IS DELIBERATELY UNCHANGED — user chose not to rewrite, since new
