@@ -48,11 +48,11 @@
   has not executed it once. Watch the first run; the README badge will show
   it. And the repo DESCRIPTION and TOPICS on GitHub are still empty, which is
   the single biggest discoverability gap for a public repo.
-  ALSO OPEN (privacy, user decision): the git author email on every recent
-  commit is a personal student address, and it also appears in CHANGELOG.md.
-  An earlier commit used the GitHub noreply address instead. Not changed
-  without the user's say-so — rewriting history on a public repo breaks every
-  existing clone and fork.
+  RESOLVED (privacy): repo-local `git config user.email` is now the GitHub
+  noreply address and the personal student address is redacted from this file.
+  HISTORY IS DELIBERATELY UNCHANGED — user chose not to rewrite, since new
+  SHAs would break every existing clone and fork for a value GitHub may have
+  cached anyway. Past commits still carry the old address; that is accepted.
 - OPEN DECISIONS: HEAVY regex breadth still fires on `implement|build a|
   performance|integrat`; unchanged pending a real false-positive rate.
 - DO NOT: put team-router logic inline in hooks.json (4 domain branches +
@@ -208,7 +208,7 @@ change. Never edit past entries. -->
 
 - PUSHED as 046b384 (aa0fa61..046b384, origin/main) — supersedes the
   "STILL OPEN" bullet above; the remote install path is now live. Single
-  commit, sole author `Dhananjay <n11257997@qut.edu.au>`, no
+  commit, sole author `Dhananjay` (single author), no
   `Co-Authored-By` trailer (user asked explicitly; also CLAUDE.md rule).
   Carried the v1.6.0 audit follow-ups (team-router regressions, 10-agent
   description, README agent list, new .gitignore) in the same commit
