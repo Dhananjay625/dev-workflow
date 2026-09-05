@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an addition or change
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This plugin's thesis is that less is better. Every skill, agent and
+        hook costs tokens on real sessions, so the bar for adding one is the
+        problem it solves in practice — not that it would be nice to have.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What went wrong in real work?
+      description: Describe the session where you wanted this, not the feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you change?
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: What does it cost?
+      description: |
+        Tokens per session, a new dependency, more surface to maintain, more
+        for a user to learn. An honest answer here helps far more than it hurts.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ports
+    attributes:
+      label: Which ports would this touch?
+      multiple: true
+      options: [Claude Code, Codex, Both]

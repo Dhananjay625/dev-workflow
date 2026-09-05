@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -z \"$f\" ] && { echo '[dev-workflow] lint: no file path (jq missing or non-file tool)'; exit 0; }; case \"$f\" in *.py) if command -v ruff >/dev/null; then ruff check --fix \"$f\" 2>&1 | tail -5; echo \"[dev-workflow] lint: ruff ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (ruff not installed)\"; fi ;; *.js|*.jsx|*.ts|*.tsx) if npx --no-install prettier --write \"$f\" >/dev/null 2>&1; then echo \"[dev-workflow] lint: prettier ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (prettier not installed)\"; fi ;; *) echo \"[dev-workflow] lint: no linter mapped for $f\" ;; esac; exit 0"
+            "command": "[ -n \"$DEV_WORKFLOW_NO_LINT\" ] && { echo '[dev-workflow] lint: skipped (DEV_WORKFLOW_NO_LINT set)'; exit 0; }; f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -z \"$f\" ] && { echo '[dev-workflow] lint: no file path (jq missing or non-file tool)'; exit 0; }; case \"$f\" in *.py) if command -v ruff >/dev/null; then ruff check --fix \"$f\" 2>&1 | tail -5; echo \"[dev-workflow] lint: ruff ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (ruff not installed)\"; fi ;; *.js|*.jsx|*.ts|*.tsx) if npx --no-install prettier --write \"$f\" >/dev/null 2>&1; then echo \"[dev-workflow] lint: prettier ran on $f\"; else echo \"[dev-workflow] lint: skipped $f (prettier not installed)\"; fi ;; *) echo \"[dev-workflow] lint: no linter mapped for $f\" ;; esac; exit 0"
           }
         ]
       }
@@ -36,7 +36,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -f package.json ] && grep -q '\"test\"' package.json 2>/dev/null; then echo '[dev-workflow] stop-check: running npm test'; npm test --silent 2>&1 | tail -10; elif [ -d tests ] || ls test_*.py *_test.py >/dev/null 2>&1; then if command -v pytest >/dev/null; then echo '[dev-workflow] stop-check: running pytest'; python3 -m pytest -q 2>&1 | tail -10; else echo '[dev-workflow] stop-check: tests present but pytest not installed'; fi; else echo '[dev-workflow] stop-check: no test suite detected'; fi; exit 0"
+            "timeout": 120,
+            "command": "[ -n \"$DEV_WORKFLOW_NO_STOP_TESTS\" ] && { echo '[dev-workflow] stop-check: skipped (DEV_WORKFLOW_NO_STOP_TESTS set)'; exit 0; }; if [ -f package.json ] && grep -q '\"test\"' package.json 2>/dev/null; then echo '[dev-workflow] stop-check: running npm test'; npm test --silent 2>&1 | tail -10; elif [ -d tests ] || ls test_*.py *_test.py >/dev/null 2>&1; then if command -v pytest >/dev/null; then echo '[dev-workflow] stop-check: running pytest'; python3 -m pytest -q 2>&1 | tail -10; else echo '[dev-workflow] stop-check: tests present but pytest not installed'; fi; else echo '[dev-workflow] stop-check: no test suite detected'; fi; exit 0"
           }
         ]
       }

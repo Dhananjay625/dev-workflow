@@ -1,0 +1,30 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      # jq ships on ubuntu-latest; assert it rather than assume it, so a
+      # runner image change surfaces as a clear failure instead of every
+      # JSON check silently reporting nothing.
+      - name: Check prerequisites
+        run: jq --version && shellcheck --version
+
+      - name: Repo invariants
+        run: sh scripts/validate.sh
+
+      # Separate from validate.sh: shellcheck is a lint, not an invariant,
+      # and contributors without it installed must still be able to run
+      # validate.sh locally.
+      - name: Lint shell
+        run: shellcheck -s sh hooks/*.sh scripts/*.sh

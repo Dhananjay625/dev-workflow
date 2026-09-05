@@ -1,5 +1,8 @@
 # Dev-workflow
 
+[![validate](https://github.com/Dhananjay625/dev-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhananjay625/dev-workflow/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A production workflow for AI coding agents: plan-first execution,
 cross-session memory via a project changelog, evidence discipline, and
 tier-calibrated code minimalism.
@@ -69,8 +72,12 @@ omission, output ends with `OMITTED: <count> <type> - details in <file>`.
 
 **4. Deterministic quality hooks.**
 - On every file edit: auto-lint/format (ruff for Python, prettier for JS/TS -
-  skipped gracefully if not installed).
-- On session stop: run the project's test suite if one exists.
+  skipped gracefully if not installed). This rewrites the file in place; set
+  `DEV_WORKFLOW_NO_LINT=1` to leave your files untouched.
+- On session stop: run the project's test suite if one exists, capped at 120s
+  by the hook's own timeout. Set `DEV_WORKFLOW_NO_STOP_TESTS=1` to skip it
+  entirely - worth doing in a repo whose suite takes minutes, since this runs
+  at the end of every turn.
 
 **5. Blocker protocol.**
 An approach that fails twice halts with
@@ -188,8 +195,17 @@ and retry.
 
 ## Install (Codex)
 
-This repo doubles as a repo-scoped Codex marketplace
-(`.agents/plugins/marketplace.json`), so installation is:
+This repo doubles as a Codex marketplace
+(`.agents/plugins/marketplace.json`), so it installs from the URL directly -
+no clone:
+
+```
+codex plugin marketplace add https://github.com/Dhananjay625/dev-workflow
+codex plugin add dev-workflow
+codex plugin list       # confirm: installed, enabled, 1.6.1
+```
+
+Or, if you want the repo locally anyway:
 
 ```
 git clone https://github.com/Dhananjay625/dev-workflow
@@ -282,6 +298,10 @@ None hard. Optional, auto-detected:
 
 Everything degrades gracefully if absent.
 
+Both mutating hooks are opt-out via environment variable:
+- `DEV_WORKFLOW_NO_LINT=1` - never rewrite edited files
+- `DEV_WORKFLOW_NO_STOP_TESTS=1` - never run the suite on stop
+
 ## Structure
 
 ```
@@ -321,6 +341,23 @@ dev-workflow/
 | Agent bodies | Only on dispatch | On demand |
 | Hooks | Never in context - shell commands | Zero; SessionStart injects only the changelog tail |
 
+## Contributing
+
+Issues and pull requests are welcome — particularly router misclassifications
+and hook problems you hit in real work.
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to test hooks and the router, the
+  two-port parity rule, and what to run before opening a PR
+- [SECURITY.md](SECURITY.md) — what this plugin executes on your machine, and
+  how to report a vulnerability privately
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+
+Everything CI checks, you can run in one command:
+
+```sh
+sh scripts/validate.sh
+```
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE). Copyright (c) Dhananjay Mahendiratta.

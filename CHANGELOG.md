@@ -14,14 +14,13 @@
   email"/"fix a typo in the readme"=light.
   `sh -n hooks/team-router.sh` clean; all 5 JSON manifests pass `jq -e .`;
   exit code is 0 on every path.
-- BROKEN/OPEN: nothing blocking. Two accepted-risk items, deliberately NOT
-  changed (they are design calls, not defects):
-  (1) Stop hook runs the project's FULL test suite on every stop with no
-  timeout - in a large repo this adds minutes to every turn-end.
-  (2) PostToolUse runs `ruff check --fix` / `prettier --write`, silently
-  MUTATING the user's file after every edit. Both are opt-out-less today.
-  Also: "why is my pipeline dropping rows" still exits light (interrogative,
-  no task verb). Diagnostic questions are cheap to escalate manually.
+- ALSO WORKING: v1.6.1 closes both accepted-risk hooks. Stop now carries a
+  harness-enforced `"timeout": 120` and an opt-out; PostToolUse lint has an
+  opt-out. Both verified by piping the extracted command into `sh` with and
+  without the env var set - see the 1.6.1 entry for the exact transcript.
+- BROKEN/OPEN: nothing blocking. One accepted-risk item remains:
+  "why is my pipeline dropping rows" still exits light (interrogative, no
+  task verb). Diagnostic questions are cheap to escalate manually.
 - ALSO WORKING: Codex remote install, LIVE-VERIFIED against the real GitHub
   URL after 046b384. `codex plugin marketplace add
   https://github.com/Dhananjay625/dev-workflow` now resolves
@@ -31,12 +30,29 @@
   "ON_FIRST_USE"`, which Codex 0.147.0's deserializer rejects (valid:
   `ON_INSTALL` | `ON_USE`); the bad value aborted the entire marketplace
   parse before any plugin was listed, so the error never named the plugin.
-- NEXT STEP: decide on the two accepted-risk hooks above - most likely a
-  timeout on Stop and a documented opt-out env var for the lint mutation.
-  Working tree is otherwise clean and pushed (origin/main == 046b384).
-  Optional: README.md:189-205 still documents only the clone-then-`/plugins`
-  Codex flow; the one-line `codex plugin marketplace add <url>` now works
-  and would be the better lead.
+- ALSO WORKING: open-source infrastructure is in place — CONTRIBUTING.md,
+  SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates, a CI workflow, and
+  scripts/validate.sh holding the 9 repo invariants that were previously
+  re-checked by hand each session. validate.sh is negative-tested: four
+  injected faults each produced exit 1.
+- NEXT STEP: v1.6.1 is COMMITTED BUT NOT YET LIVE-VERIFIED end-to-end. The
+  hook commands were verified in isolation (extracted from the JSON, piped
+  into `sh`); what is NOT yet proven is that Claude Code itself honours the
+  `"timeout": 120` field on a Stop hook - that needs one real session in a
+  repo with a slow suite. Also NOT verified: the new one-line Codex install
+  block in README.md:194-203 was written from `codex plugin --help`
+  (subcommand is `add`, NOT `install`), not from an actual clean install.
+  Re-verify with `codex plugin marketplace remove` then add from the URL.
+  ALSO NOT YET VERIFIED: the CI workflow has never actually run on GitHub —
+  it is green locally (validate.sh exit 0, shellcheck clean) but the runner
+  has not executed it once. Watch the first run; the README badge will show
+  it. And the repo DESCRIPTION and TOPICS on GitHub are still empty, which is
+  the single biggest discoverability gap for a public repo.
+  ALSO OPEN (privacy, user decision): the git author email on every recent
+  commit is a personal student address, and it also appears in CHANGELOG.md.
+  An earlier commit used the GitHub noreply address instead. Not changed
+  without the user's say-so — rewriting history on a public repo breaks every
+  existing clone and fork.
 - OPEN DECISIONS: HEAVY regex breadth still fires on `implement|build a|
   performance|integrat`; unchanged pending a real false-positive rate.
 - DO NOT: put team-router logic inline in hooks.json (4 domain branches +
@@ -57,12 +73,114 @@
   works - a stale registration from an older codex build kept `ON_FIRST_USE`
   working locally for weeks while every GitHub-URL install failed. Verify
   remote installs by `marketplace remove` then re-add from the URL.
+  DO NOT document `codex plugin install <name>` - there is no such
+  subcommand. `codex plugin --help` on 0.147.0 lists exactly: add, list,
+  marketplace, remove. Installing a plugin is `codex plugin add`.
+  DO NOT verify a hook by running `sh -n` on a file built from a failed
+  `jq` - an empty file passes `sh -n` and reports a false OK. Check the
+  byte count of the extracted command before trusting the syntax result.
+  DO NOT pipe into a `while read` loop in a check script — the loop body runs
+  in a SUBSHELL and any failure flag it sets is discarded, so the script
+  reports FAIL and exits 0. Redirect from a file instead.
+  DO NOT list files for validation with plain `git ls-files` — it shows only
+  TRACKED files, so newly added files are skipped and the check passes
+  vacuously. Use `--cached --others --exclude-standard`.
+  DO NOT add a CI lint step without running that linter locally first —
+  shellcheck found 3 hard errors in the first draft of validate.sh, which
+  would have made the very first CI run red.
 
 ---
 
 ## Entries
 <!-- Append-only. One entry per change, written in the same turn as the
 change. Never edit past entries. -->
+
+### 2026-09-05 (open-source infrastructure)
+- scripts/validate.sh — new (0→~100 lines) — the repo's invariants were being
+  re-checked by hand every session (manifests parse, hooks are valid shell,
+  agent names unique, port parity, one `## Current state`); that is exactly
+  what a script should hold, and CI can then run the same file — verified:
+  passes clean, and NEGATIVE-tested by injecting four faults (version drift,
+  agent name/filename mismatch, a deleted agent the router offers, a malformed
+  YAML file) — each produced a FAIL line and exit 1, and reverting restored
+  exit 0.
+- scripts/validate.sh check 5 — `grep ... | while read` → `while read < tmpfile`
+  — the pipeline ran the loop in a SUBSHELL, so `fail=1` was discarded: the
+  script printed `FAIL: router offers 'researcher'...` and still exited 0. CI
+  would have gone GREEN on a broken repo, which is worse than having no CI —
+  verified: deleting agents/researcher.md now yields exit 1, restoring yields 0.
+- scripts/validate.sh checks 1 and 9 — `git ls-files` → `git ls-files --cached
+  --others --exclude-standard` — plain ls-files lists only TRACKED files, so
+  the four brand-new .github YAML files were invisible and check 9 passed by
+  finding nothing — verified: check 9 now lists all 4 files; `find` rejected in
+  the other direction because it descends into gitignored .claude-flow/.
+- .github/workflows/ci.yml — new — runs validate.sh + shellcheck on push/PR.
+  shellcheck is a separate step, not folded into validate.sh, so contributors
+  without it installed can still run the invariants — verified: installed
+  shellcheck locally first and fixed 3 SC1087 ERRORS (`$k[$i]` parses as an
+  array expansion) plus 4 infos; `shellcheck -s sh hooks/*.sh scripts/*.sh` is
+  now clean, so CI will not go red on its first run. hooks/team-router.sh was
+  already clean.
+- CONTRIBUTING.md — new (107 lines) — documents the two-port parity rule, the
+  two hook rules (never block the user; anything mutating or slow needs an
+  opt-out), and how to extract a hook command from the JSON before testing it,
+  including the byte-count check that catches an empty extraction.
+- SECURITY.md — new — this plugin runs shell on every prompt, edit and
+  turn-end and rewrites the user's files, which is a real disclosure
+  obligation for an open-source install; states what runs, that nothing leaves
+  the machine, both opt-out vars, and routes reports to GitHub private
+  advisories rather than a public issue.
+- CODE_OF_CONDUCT.md — new — shortened Contributor Covenant 2.1. Enforcement
+  contact is the private security advisory URL, deliberately NOT an email
+  address, to avoid publishing a personal address in a public repo.
+- .github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml,
+  .github/PULL_REQUEST_TEMPLATE.md — new — bug template requires version, host
+  and platform (the fields that actually make a hook/router bug reproducible);
+  feature template requires an explicit cost answer, since the project's thesis
+  is that additions must justify their token cost — verified: all 4 YAML files
+  parse under `ruby -ryaml`, and validate.sh check 9 now enforces that.
+- README.md:3-4, 345-360 — CI + license badges, and a Contributing section
+  linking the three new docs — verified: `grep -n` finds all five references.
+
+### 2026-09-05 (v1.6.1 - hook opt-outs, Stop timeout, Codex install lead)
+- hooks/hooks.json:29 — PostToolUse lint command prefixed with
+  `[ -n "$DEV_WORKFLOW_NO_LINT" ] && { echo ...; exit 0; };` — the hook ran
+  `ruff check --fix` / `prettier --write` on every edit, silently rewriting
+  the user's file with no way to decline; an opt-out is the minimum a
+  mutating hook owes its user — verified: extracted the command with
+  `jq -r --arg k PostToolUse '.hooks[$k][0].hooks[0].command'` (759 bytes,
+  `sh -n` clean) and piped a synthetic `{"tool_input":{"file_path":
+  "/tmp/x.py"}}` payload into it — with `DEV_WORKFLOW_NO_LINT=1` it prints
+  `lint: skipped (DEV_WORKFLOW_NO_LINT set)` and exits 0; unset, it still
+  reaches the normal `no linter mapped` path.
+- hooks/hooks.json:38-39 — Stop hook gained `"timeout": 120` and the same
+  opt-out guard (`DEV_WORKFLOW_NO_STOP_TESTS`) — it ran the project's FULL
+  suite at every turn-end with no bound, adding minutes per turn in a large
+  repo. Used the harness's own `timeout` field rather than a `timeout(1)`
+  wrapper because macOS ships no `timeout` binary (it is `gtimeout` from
+  coreutils, not present by default), so a shell wrapper would silently
+  no-op on the author's own platform — verified: `jq -r
+  '.hooks.Stop[0].hooks[0].timeout'` = 120; command extracted (639 bytes,
+  `sh -n` clean); with the env var set it prints `stop-check: skipped` and
+  exits 0, unset it prints `no test suite detected`.
+- README.md:71-77 — hooks bullet rewritten to state that lint REWRITES the
+  file in place and to name both env vars + the 120s cap — an opt-out no one
+  can discover is not an opt-out — verified: `grep -n DEV_WORKFLOW_NO`
+  README.md returns both names in the behaviour section and again under
+  Requirements.
+- README.md:280-286 — Requirements section gained an explicit opt-out list.
+- README.md:191-203 — Codex install now leads with `codex plugin marketplace
+  add <url>` + `codex plugin add dev-workflow`, with the clone flow demoted
+  to a secondary option — the one-line remote install started working at
+  046b384 but the README still documented only the clone-then-`/plugins`
+  path — verified: `codex plugin --help` on the installed 0.147.0 lists
+  exactly `add, list, marketplace, remove`. NOTE: I first wrote `codex
+  plugin install dev-workflow`; there is no `install` subcommand and the
+  help output caught it before commit.
+- .claude-plugin/plugin.json:4 and plugins/dev-workflow-codex/.codex-plugin/
+  plugin.json:3 — version 1.6.0→1.6.1 — hook behaviour changed in a
+  user-visible way (a new field and two new env vars) — verified: all 5 JSON
+  manifests pass `jq -e .`, both report 1.6.1.
 
 ### 2026-08-12 (Codex remote install fix)
 - .agents/plugins/marketplace.json:15 — `"authentication": "ON_FIRST_USE"` →

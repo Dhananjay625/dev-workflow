@@ -1,0 +1,66 @@
+name: Bug report
+description: Something in the plugin misbehaves
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most issues here are hooks or the prompt router. The fields below are
+        the ones that actually let me reproduce a problem — please don't skip
+        the version and platform.
+
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: "Run: jq -r .version .claude-plugin/plugin.json"
+      placeholder: "1.6.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Agent host
+      options: [Claude Code, Codex, Other]
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: OS and shell
+      placeholder: "macOS 15.3, zsh 5.9"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        For a router issue, the exact prompt text is usually enough:
+
+        run() { printf '{"prompt":%s}' "$(printf '%s' "$1" | jq -Rs .)" | sh hooks/team-router.sh; }
+        run "your prompt here"
+
+        For a hook issue, extract the command first:
+
+        jq -r '.hooks.Stop[0].hooks[0].command' hooks/hooks.json > /tmp/h.sh && sh /tmp/h.sh
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: validate
+    attributes:
+      label: Output of `sh scripts/validate.sh`
+      description: Optional, but it rules out a lot at once.
+      render: shell
